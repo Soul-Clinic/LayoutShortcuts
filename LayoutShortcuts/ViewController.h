@@ -7,7 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "AnimationDelegate.h"
 
 @interface ViewController : UIViewController
 @property (weak, nonatomic) IBOutlet UIView *wrapper;

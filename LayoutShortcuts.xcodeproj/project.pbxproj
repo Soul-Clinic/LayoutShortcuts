@@ -13,14 +13,13 @@
 		360B342118E38C2E0032CB4F /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 360B342018E38C2E0032CB4F /* XCTest.framework */; };
 		360B342218E38C2E0032CB4F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 360B340118E38C2E0032CB4F /* Foundation.framework */; };
 		360B342318E38C2E0032CB4F /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 360B340518E38C2E0032CB4F /* UIKit.framework */; };
-		36338FE718E42B98005ECA4D /* AnimationDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 36338FCC18E42B98005ECA4D /* AnimationDelegate.m */; };
 		36338FE818E42B98005ECA4D /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 36338FCE18E42B98005ECA4D /* AppDelegate.m */; };
 		36338FEA18E42B98005ECA4D /* Common.m in Sources */ = {isa = PBXBuildFile; fileRef = 36338FD318E42B98005ECA4D /* Common.m */; };
-		36338FEB18E42B98005ECA4D /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 36338FD518E42B98005ECA4D /* InfoPlist.strings */; };
 		36338FEC18E42B98005ECA4D /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 36338FD718E42B98005ECA4D /* Images.xcassets */; };
 		36338FEE18E42B98005ECA4D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 36338FDA18E42B98005ECA4D /* main.m */; };
 		36338FEF18E42B98005ECA4D /* sunset_tree.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 36338FDB18E42B98005ECA4D /* sunset_tree.jpg */; };
 		36338FF018E42B98005ECA4D /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 36338FDD18E42B98005ECA4D /* ViewController.m */; };
+		3633905718E4E708005ECA4D /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 3633905618E4E708005ECA4D /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,8 +39,6 @@
 		360B340518E38C2E0032CB4F /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		360B341F18E38C2E0032CB4F /* LayoutShortcutsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LayoutShortcutsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		360B342018E38C2E0032CB4F /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
-		36338FCB18E42B98005ECA4D /* AnimationDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AnimationDelegate.h; path = LayoutShortcuts/AnimationDelegate.h; sourceTree = SOURCE_ROOT; };
-		36338FCC18E42B98005ECA4D /* AnimationDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AnimationDelegate.m; path = LayoutShortcuts/AnimationDelegate.m; sourceTree = SOURCE_ROOT; };
 		36338FCD18E42B98005ECA4D /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = LayoutShortcuts/AppDelegate.h; sourceTree = SOURCE_ROOT; };
 		36338FCE18E42B98005ECA4D /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = LayoutShortcuts/AppDelegate.m; sourceTree = SOURCE_ROOT; };
 		36338FD218E42B98005ECA4D /* Common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Common.h; path = LayoutShortcuts/Common.h; sourceTree = SOURCE_ROOT; };
@@ -52,9 +49,10 @@
 		36338FDB18E42B98005ECA4D /* sunset_tree.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = sunset_tree.jpg; path = LayoutShortcuts/sunset_tree.jpg; sourceTree = SOURCE_ROOT; };
 		36338FDC18E42B98005ECA4D /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ViewController.h; path = LayoutShortcuts/ViewController.h; sourceTree = SOURCE_ROOT; };
 		36338FDD18E42B98005ECA4D /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ViewController.m; path = LayoutShortcuts/ViewController.m; sourceTree = SOURCE_ROOT; };
-		36338FF418E42D58005ECA4D /* LayoutShortcuts-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "LayoutShortcuts-Info.plist"; sourceTree = "<group>"; };
-		36338FF518E42D58005ECA4D /* LayoutShortcuts-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LayoutShortcuts-Prefix.pch"; sourceTree = "<group>"; };
 		36338FF918E42E60005ECA4D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = LayoutShortcuts/Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		3633905318E4E6E0005ECA4D /* LayoutShortcuts-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "LayoutShortcuts-Info.plist"; sourceTree = SOURCE_ROOT; };
+		3633905418E4E6E1005ECA4D /* LayoutShortcuts-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LayoutShortcuts-Prefix.pch"; sourceTree = SOURCE_ROOT; };
+		3633905618E4E708005ECA4D /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +82,7 @@
 		360B33F518E38C2E0032CB4F = {
 			isa = PBXGroup;
 			children = (
+				3633905618E4E708005ECA4D /* README.md */,
 				360B340718E38C2E0032CB4F /* LayoutShortcuts */,
 				360B340018E38C2E0032CB4F /* Frameworks */,
 				360B33FF18E38C2E0032CB4F /* Products */,
@@ -113,8 +112,6 @@
 		360B340718E38C2E0032CB4F /* LayoutShortcuts */ = {
 			isa = PBXGroup;
 			children = (
-				36338FCB18E42B98005ECA4D /* AnimationDelegate.h */,
-				36338FCC18E42B98005ECA4D /* AnimationDelegate.m */,
 				36338FCD18E42B98005ECA4D /* AppDelegate.h */,
 				36338FCE18E42B98005ECA4D /* AppDelegate.m */,
 				36338FCF18E42B98005ECA4D /* Base.lproj */,
@@ -153,8 +150,8 @@
 		36338FF718E42DE9005ECA4D /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				36338FF418E42D58005ECA4D /* LayoutShortcuts-Info.plist */,
-				36338FF518E42D58005ECA4D /* LayoutShortcuts-Prefix.pch */,
+				3633905318E4E6E0005ECA4D /* LayoutShortcuts-Info.plist */,
+				3633905418E4E6E1005ECA4D /* LayoutShortcuts-Prefix.pch */,
 			);
 			name = "Supporting Files";
 			path = ..;
@@ -237,7 +234,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				36338FEC18E42B98005ECA4D /* Images.xcassets in Resources */,
-				36338FEB18E42B98005ECA4D /* InfoPlist.strings in Resources */,
+				3633905718E4E708005ECA4D /* README.md in Resources */,
 				36338FEF18E42B98005ECA4D /* sunset_tree.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -258,7 +255,6 @@
 			files = (
 				36338FF018E42B98005ECA4D /* ViewController.m in Sources */,
 				36338FEA18E42B98005ECA4D /* Common.m in Sources */,
-				36338FE718E42B98005ECA4D /* AnimationDelegate.m in Sources */,
 				36338FEE18E42B98005ECA4D /* main.m in Sources */,
 				36338FE818E42B98005ECA4D /* AppDelegate.m in Sources */,
 			);

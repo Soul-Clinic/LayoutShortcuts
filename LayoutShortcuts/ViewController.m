@@ -295,7 +295,7 @@
 		moving = YES;
 		UIButton* btn = _buttons[i];
 		[UIView animateWithDuration:duration
-							  delay:(row * 0.4 + column * 0.2) * duration
+							  delay:(row * 0.2 + column * 0.15) * duration
 							options:UIViewAnimationOptionBeginFromCurrentState
 						 animations:^{
 							 btn.origin =[_origins[forward ? i + 1 : i - 1] CGPointValue];

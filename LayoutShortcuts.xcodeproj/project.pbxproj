@@ -20,6 +20,7 @@
 		36338FEF18E42B98005ECA4D /* sunset_tree.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 36338FDB18E42B98005ECA4D /* sunset_tree.jpg */; };
 		36338FF018E42B98005ECA4D /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 36338FDD18E42B98005ECA4D /* ViewController.m */; };
 		3633905718E4E708005ECA4D /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 3633905618E4E708005ECA4D /* README.md */; };
+		36E8B3D518E6098C00D860C8 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 36338FF818E42E60005ECA4D /* Main.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -236,6 +237,7 @@
 				36338FEC18E42B98005ECA4D /* Images.xcassets in Resources */,
 				3633905718E4E708005ECA4D /* README.md in Resources */,
 				36338FEF18E42B98005ECA4D /* sunset_tree.jpg in Resources */,
+				36E8B3D518E6098C00D860C8 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

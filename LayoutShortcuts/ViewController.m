@@ -12,14 +12,16 @@
 
 //TODO: Write a ShortCutsViewController
 
-#define kShakeAnimationKey	@"shaking"
-#define kOutside			-1
-#define kPanningAlpha		0.9
-#define kShakeAngle			(10.0 / 180.0 * M_PI)
-#define kShakeTimeframe		0.1
-#define kStandDuration		1.f
-#define kMoveDuration		0.7
-#define kPanScaleFactor		1.3
+#define kShakeAnimationKey		@"shaking"
+#define kOutside				-1
+#define kPanningAlpha			0.9
+#define kShakeAngle				(10.0 / 180.0 * M_PI)
+#define kShakeTimeframe			0.1
+#define kStandDuration			1.0
+#define kMoveDuration			0.7
+#define kPanScaleFactor			1.3
+#define kQuietTimeBeforeMove	0.4
+
 
 @interface ViewController ()
 {
@@ -28,6 +30,7 @@
 	UIButton* _panningButton;
 	float _zPosition;
 	int _columns, _current, _destination, _appending;
+	BOOL _layoutUpdated;
 }
 @end
 
@@ -180,11 +183,13 @@
 - (IBAction)handlePanGesture:(UIPanGestureRecognizer *)pan
 {
 
-    static CGPoint start, position,
-	translation, newOrigin;
+    static CGPoint start, position, translation, newOrigin;
+	static BOOL trigger;
 
 	UIButton* btn = (UIButton*)pan.view;
 	CALayer* layer = btn.layer;
+
+
 
 	switch (pan.state) {
 		case UIGestureRecognizerStateBegan:
@@ -201,6 +206,9 @@
 					[aButton.layer addAnimation:[self shakeAnimationAngle:kShakeAngle duration:kShakeTimeframe] forKey:kShakeAnimationKey];
 				}
 			}
+			[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(updateLayout) object:nil];
+			NSLog(@"Cancel in the begin");
+			trigger = NO;
 			break;
 		}
 		case UIGestureRecognizerStateChanged:
@@ -210,13 +218,27 @@
 			btn.origin = newOrigin;
 			position = [pan locationOfTouch:0 inView:btn.superview];
 			_destination = [self indexAtPosition:position];
-			if (_destination != _current) {
-				[self updateLayout];
+			CGPoint velocity = [pan velocityInView:self.view];
+			float linearVelocity = sqrtf(powf(velocity.x, 2) + powf(velocity.y, 2));
+
+			if (_destination != _current && linearVelocity < 40.f) {
+				NSLog(@"Speed is %f", linearVelocity);
+				if (trigger == NO) {
+					[self performSelector:@selector(updateLayout) withObject:pan afterDelay:kQuietTimeBeforeMove];
+					trigger = YES;
+				}
+			} else {
+				[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(updateLayout) object:pan];
+				NSLog(@"Cancel in the move: %f", linearVelocity);
+				trigger = NO;
 			}
 			break;
 		}
 		case UIGestureRecognizerStateEnded:
 		{
+			[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(updateLayout) object:pan];
+			NSLog(@"Cancel in the end");
+			trigger = NO;
 			[self layBack:btn inPoint:position];
 			break;
 		}
@@ -224,6 +246,7 @@
 			break;
 	}
 }
+
 
 - (void)updateLayout
 {
@@ -251,6 +274,7 @@
 	[layer removeAnimationForKey:@"scale"];
 
 	_current = [self indexAtPosition:position];
+	int index = (int)[_buttons indexOfObject:aButton];
 	[self resortButtonIndexs];
 	float duration = (_current == kOutside ? 0.6 : 0.2) * kStandDuration;
 	[UIView animateWithDuration:duration
@@ -259,9 +283,14 @@
 					 animations:^{
 						 aButton.alpha /= kPanningAlpha;
 						 layer.transform = CATransform3DIdentity;
-						 for (int i = 0; i < _buttons.count; ++i) {
-							 UIButton* btn = _buttons[i];
-							 btn.origin = [_origins[i] CGPointValue];
+						 if (_layoutUpdated == NO) {
+							 aButton.origin = [_origins[index] CGPointValue];
+						 }
+						 else {
+							 for (int i = 0; i < _buttons.count; ++i) {
+								 UIButton* btn = _buttons[i];
+								 btn.origin = [_origins[i] CGPointValue];
+							 }
 						 }
 					 }
 					 completion:^(BOOL finished) {
@@ -272,6 +301,8 @@
 						 _current = kOutside;
 						 _panningButton = nil;
 						 _appending = NO;
+						 _layoutUpdated = NO;
+						 [self resortButtonIndexs];
 						 NSLog(@"Complete");
 					 }];
 }
@@ -279,6 +310,8 @@
 - (void)moveButtonsRangFrom:(int)first to:(int)last directionForward:(BOOL)forward
 {
 	static BOOL moving;
+	_layoutUpdated = YES;
+
 	if (moving) {
 		_appending = YES;
 		return;
@@ -309,8 +342,7 @@
 								 _appending = NO;
 							 }
 						 }];
-	}
-}
+	}}
 
 - (void)resortButtonIndexs
 {

@@ -130,8 +130,8 @@ void FELogError(NSString* format, ...)
 #ifdef __FEDEBUG
     NSLogv(format, args);
 #else
-//    NSString* content = [[NSString alloc] initWithFormat:format arguments:args];
-//	[MobClick event:kUMengEventError label:content];
+	//    NSString* content = [[NSString alloc] initWithFormat:format arguments:args];
+	//	[MobClick event:kUMengEventError label:content];
 #endif
     va_end(args);
 
@@ -264,13 +264,12 @@ NSString* getLanguageCode(void)
 - (void)printSubviewsTree
 {
     NSLog(@"==========================================================================");
-    NSLog(@"%@ {(%.2f, %.2f) (%.2f, %.2f)}:\n",  self.class, self.x, self.y, self.width, self.height );
+    NSLog(@"%@ [%p]{(%.2f, %.2f) (%.2f, %.2f)}  Subview trees::\n",  self.class, self, self.x, self.y, self.width, self.height );
     NSLog(@" ");
     [self printSubviewsIndex:0];
     NSLog(@" ");
     NSLog(@"==========================================================================\n\n");
 }
-
 - (void)printSubviewsIndex:(int)index //Private
 {
     NSMutableString *prefix = [NSMutableString stringWithString:@"\t|"];
@@ -280,8 +279,32 @@ NSString* getLanguageCode(void)
     }
 
     for (UIView *subview in self.subviews) {
-        NSLog(@"%@%@ \t{(%.2f, %.2f) (%.2f, %.2f)}",  prefix, subview.class, subview.x, subview.y, subview.width, subview.height );
+        NSLog(@"%@%@ [%p]\t{(%.2f, %.2f) (%.2f, %.2f)}",  prefix, subview.class, subview, subview.x, subview.y, subview.width, subview.height );
         [subview printSubviewsIndex:index + 1];
+    }
+}
+
+
+- (void)printSuperViewsTree
+{
+    NSLog(@"==========================================================================");
+    NSLog(@"%@ [%p] {(%.2f, %.2f) (%.2f, %.2f)}  Super view trees::\n",  self.class, self, self.x, self.y, self.width, self.height );
+    NSLog(@" ");
+    [self printSuperViewsIndex:0];
+    NSLog(@" ");
+    NSLog(@"==========================================================================\n\n");
+}
+- (void)printSuperViewsIndex:(int)index //Private
+{
+    NSMutableString *prefix = [NSMutableString stringWithString:@"\t|"];
+    //    [prefix appendFormat:@"%d", index];
+    for (int i = 0; i < index; i++) {
+        [prefix appendString:@"————"];
+    }
+
+    if (self.superview) {
+        NSLog(@"%@%@ [%p]\t{(%.2f, %.2f) (%.2f, %.2f)}",  prefix, self.superview.class, self.superview, self.superview.x, self.superview.y, self.superview.width, self.superview.height );
+        [self.superview printSuperViewsIndex:index + 1];
     }
 }
 @end
@@ -316,7 +339,7 @@ NSString* getLanguageCode(void)
     UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
 
     UIGraphicsEndImageContext();
-    
+
     return newImage;
 }
 
@@ -388,7 +411,7 @@ NSString* getLanguageCode(void)
     [request setHTTPBody:body];
 
     // set the content-length
-    NSString *postLength = [NSString stringWithFormat:@"%d", (int)([body length])];
+    NSString *postLength = [NSString stringWithFormat:@"%d", [body length]];
     [request setValue:postLength forHTTPHeaderField:@"Content-Length"];
 
     // set URL
@@ -427,7 +450,7 @@ NSString* getLanguageCode(void)
 
         // add image data
         NSData *imageData = UIImageJPEGRepresentation(image, 1.0);
-        NSLog(@"Image data length = %i", (int)imageData.length);
+        NSLog(@"Image data length = %i", imageData.length);
         if (imageData) {
             [body appendData:[[NSString stringWithFormat:@"--%@\r\n", BoundaryConstant] dataUsingEncoding:NSUTF8StringEncoding]];
             [body appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"image.jpg\"\r\n", imageFieldName] dataUsingEncoding:NSUTF8StringEncoding]];
@@ -443,7 +466,7 @@ NSString* getLanguageCode(void)
     [request setHTTPBody:body];
 
     // set the content-length
-    NSString *postLength = [NSString stringWithFormat:@"%d", (int)[body length]];
+    NSString *postLength = [NSString stringWithFormat:@"%d", [body length]];
     [request setValue:postLength forHTTPHeaderField:@"Content-Length"];
 
     // set URL
@@ -507,8 +530,8 @@ NSString* getLanguageCode(void)
     UIGraphicsEndImageContext();
     NSData* jpeg = UIImageJPEGRepresentation(image, 1.f);
     NSData* png = UIImagePNGRepresentation(image);
-    NSLog(@"Jpeg length = %i\tPng length = %i", (int)jpeg.length / 1024, (int)png.length / 1024);
-    
+    NSLog(@"Jpeg length = %i\tPng length = %i", jpeg.length / 1024, png.length / 1024);
+
     return image;
 }
 

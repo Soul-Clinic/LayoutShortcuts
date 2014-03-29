@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		36071B5A18E73122008A69B1 /* path.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 36071B5918E73122008A69B1 /* path.jpg */; };
+		36071B5C18E73D67008A69B1 /* flyship.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 36071B5B18E73D67008A69B1 /* flyship.jpg */; };
 		360B340218E38C2E0032CB4F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 360B340118E38C2E0032CB4F /* Foundation.framework */; };
 		360B340418E38C2E0032CB4F /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 360B340318E38C2E0032CB4F /* CoreGraphics.framework */; };
 		360B340618E38C2E0032CB4F /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 360B340518E38C2E0032CB4F /* UIKit.framework */; };
@@ -20,6 +22,7 @@
 		36338FEF18E42B98005ECA4D /* sunset_tree.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 36338FDB18E42B98005ECA4D /* sunset_tree.jpg */; };
 		36338FF018E42B98005ECA4D /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 36338FDD18E42B98005ECA4D /* ViewController.m */; };
 		3633905718E4E708005ECA4D /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 3633905618E4E708005ECA4D /* README.md */; };
+		36649D1A18E636BA0030E81B /* ShortCutViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 36649D1918E636BA0030E81B /* ShortCutViewController.m */; };
 		36E8B3D518E6098C00D860C8 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 36338FF818E42E60005ECA4D /* Main.storyboard */; };
 /* End PBXBuildFile section */
 
@@ -34,6 +37,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		36071B5918E73122008A69B1 /* path.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = path.jpg; path = "../../../../../Users/Can/Pictures/惠州学院/path.jpg"; sourceTree = "<group>"; };
+		36071B5B18E73D67008A69B1 /* flyship.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = flyship.jpg; path = "../../../../../Users/Can/Pictures/儿童卡通/flyship.jpg"; sourceTree = "<group>"; };
 		360B33FE18E38C2E0032CB4F /* LayoutShortcuts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LayoutShortcuts.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		360B340118E38C2E0032CB4F /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		360B340318E38C2E0032CB4F /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -54,6 +59,8 @@
 		3633905318E4E6E0005ECA4D /* LayoutShortcuts-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "LayoutShortcuts-Info.plist"; sourceTree = SOURCE_ROOT; };
 		3633905418E4E6E1005ECA4D /* LayoutShortcuts-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LayoutShortcuts-Prefix.pch"; sourceTree = SOURCE_ROOT; };
 		3633905618E4E708005ECA4D /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		36649D1818E636BA0030E81B /* ShortCutViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ShortCutViewController.h; path = LayoutShortcuts/ShortCutViewController/ShortCutViewController.h; sourceTree = SOURCE_ROOT; };
+		36649D1918E636BA0030E81B /* ShortCutViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ShortCutViewController.m; path = LayoutShortcuts/ShortCutViewController/ShortCutViewController.m; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +91,7 @@
 			isa = PBXGroup;
 			children = (
 				3633905618E4E708005ECA4D /* README.md */,
+				36649D1B18E636C10030E81B /* ShortCutViewController */,
 				360B340718E38C2E0032CB4F /* LayoutShortcuts */,
 				360B340018E38C2E0032CB4F /* Frameworks */,
 				360B33FF18E38C2E0032CB4F /* Products */,
@@ -122,6 +130,8 @@
 				36338FD718E42B98005ECA4D /* Images.xcassets */,
 				36338FDA18E42B98005ECA4D /* main.m */,
 				36338FDB18E42B98005ECA4D /* sunset_tree.jpg */,
+				36071B5B18E73D67008A69B1 /* flyship.jpg */,
+				36071B5918E73122008A69B1 /* path.jpg */,
 				36338FDC18E42B98005ECA4D /* ViewController.h */,
 				36338FDD18E42B98005ECA4D /* ViewController.m */,
 				36338FF718E42DE9005ECA4D /* Supporting Files */,
@@ -156,6 +166,16 @@
 			);
 			name = "Supporting Files";
 			path = ..;
+			sourceTree = "<group>";
+		};
+		36649D1B18E636C10030E81B /* ShortCutViewController */ = {
+			isa = PBXGroup;
+			children = (
+				36649D1818E636BA0030E81B /* ShortCutViewController.h */,
+				36649D1918E636BA0030E81B /* ShortCutViewController.m */,
+			);
+			name = ShortCutViewController;
+			path = LayoutShortcuts/Base.lproj;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -235,7 +255,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				36338FEC18E42B98005ECA4D /* Images.xcassets in Resources */,
+				36071B5A18E73122008A69B1 /* path.jpg in Resources */,
 				3633905718E4E708005ECA4D /* README.md in Resources */,
+				36071B5C18E73D67008A69B1 /* flyship.jpg in Resources */,
 				36338FEF18E42B98005ECA4D /* sunset_tree.jpg in Resources */,
 				36E8B3D518E6098C00D860C8 /* Main.storyboard in Resources */,
 			);
@@ -256,6 +278,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				36338FF018E42B98005ECA4D /* ViewController.m in Sources */,
+				36649D1A18E636BA0030E81B /* ShortCutViewController.m in Sources */,
 				36338FEA18E42B98005ECA4D /* Common.m in Sources */,
 				36338FEE18E42B98005ECA4D /* main.m in Sources */,
 				36338FE818E42B98005ECA4D /* AppDelegate.m in Sources */,

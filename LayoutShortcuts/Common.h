@@ -84,6 +84,7 @@ typedef enum {
 - (void)centerVerticallyInSuperview;
 - (void)centerHorizontallyInSuperview;
 - (void)printSubviewsTree;		//By Can
+- (void)printSuperViewsTree;
 @end
 
 

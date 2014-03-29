@@ -42,7 +42,7 @@ enum LocationClass
 	UIView* _pressingView;
 	float _zPosition;
 	int _currentIndex, _destinationIndex, _appending, _pageIndex;
-	BOOL _layoutUpdated, _scrolling, _firing;
+	BOOL _layoutUpdated, _firing, _justEnd;
 	CGPoint _currentLocation;
 }
 @end
@@ -129,7 +129,7 @@ enum LocationClass
 	aView.x += _scrollView.width;
 	aView.y += _scrollView.height;
 	[self subviewsUpdated];
-	NSLog(@"Width in appear %f", _scrollView.width);
+	NSLog(@"-3.0 %% 3 = %i", 2 % 3);
 }
 
 - (void)alignShortcuts
@@ -176,7 +176,7 @@ enum LocationClass
 }
 - (void)handlePan:(UIPanGestureRecognizer*)gesture
 {
-	NSLog(@"Velocity is %@", NSStringFromCGPoint([gesture velocityInView:gesture.view]));
+//	NSLog(@"Velocity is %@", NSStringFromCGPoint([gesture velocityInView:gesture.view]));
 
 }
 
@@ -192,11 +192,10 @@ enum LocationClass
 		x = point.x - _scrollView.contentOffset.x;
 
 		if (x < kLocationScrollBorder && currentPage > 0) {
-			NSLog(@"Scroll left");
 			return kLocationScrollLeft;
 		}
 		else if (x > _scrollView.width - kLocationScrollBorder && currentPage < totalPages - 1) {
-			NSLog(@"Scroll right");
+
 			return kLocationScrollRight;
 		}
 	}
@@ -259,19 +258,19 @@ enum LocationClass
 	static CGPoint lastLocation;
 	static float offset;
 	static int index, count;
-	static BOOL firing;
 
 	if (distances != timer.userInfo) {
 		distances = timer.userInfo;
 		lastLocation = _currentLocation;
 		index = 0;
 		count = (int)distances.count;
-		firing = NO;
+		_firing = NO;
 	}
 
 
-	if (_scrolling) {
-		distances[index] = [NSNumber numberWithFloat:kMaxDistanceForQuiet];
+	if (_firing) {
+		int lastIndex = (index - 1 + count) % count;
+		distances[lastIndex] = [NSNumber numberWithFloat:kMaxDistanceForQuiet];
 		return;
 	}
 
@@ -285,14 +284,12 @@ enum LocationClass
 		totalDistance += distance.floatValue;
 	}
 	if (totalDistance < kMaxDistanceForQuiet) {
-		if (!firing) {
-			firing = YES;
+		if (!_firing) {
+			_firing = YES;
 			[self _updateLayout];
 		}
 	}
-	else if (firing) {
-		firing = NO;
-	}
+
 //	NSLog(@"Last distance %f", totalDistance);
 	lastLocation = _currentLocation;
 }
@@ -347,11 +344,12 @@ enum LocationClass
 		}
 		case UIGestureRecognizerStateChanged:
 		{
-			if (_scrolling) {
+			if (_firing) {
 				return;
 			}
 			_currentLocation = [gesture locationInView:_scrollView];
-			currentOrigin = CGPointMake(start.x + (_currentLocation.x - beginLocation.x ), start.y + (_currentLocation.y - beginLocation.y));
+			currentOrigin = CGPointMake(start.x + (_currentLocation.x - beginLocation.x),
+										start.y + (_currentLocation.y - beginLocation.y));
 			shortcut.origin = currentOrigin;
 
 			break;
@@ -359,8 +357,11 @@ enum LocationClass
 		case UIGestureRecognizerStateEnded:
 		{
 			[timer invalidate];
-			if (!_scrolling) {
-				[self layBack:shortcut];
+			if (!_firing) {
+				[self _layBackPressingView];
+			}
+			else {
+				_justEnd = YES;
 			}
 
 			break;
@@ -370,9 +371,9 @@ enum LocationClass
 	}
 }
 
-- (void)layBack:(UIView*)shortcut
+- (void)_layBackPressingView
 {
-	CALayer* layer = shortcut.layer;
+	CALayer* layer = _pressingView.layer;
 	layer.transform = [((CALayer*)layer.presentationLayer) transform];
 	[layer removeAnimationForKey:kScaleAnimationKey];
 
@@ -384,11 +385,11 @@ enum LocationClass
 						  delay:0
 						options:UIViewAnimationOptionBeginFromCurrentState
 					 animations:^{
-						 shortcut.alpha /= kPressAlpha;
+						 _pressingView.alpha /= kPressAlpha;
 						 layer.transform = CATransform3DIdentity;
 						 if (_layoutUpdated == NO) {			// Not changed after long press begin, so lay back to the original one
-							 NSUInteger index = [_shortcuts indexOfObject:shortcut];
-							 shortcut.origin = [_origins[index] CGPointValue];
+							 NSUInteger index = [_shortcuts indexOfObject:_pressingView];
+							 _pressingView.origin = [_origins[index] CGPointValue];
 						 }
 						 else {
 							 for (int i = 0; i < _shortcuts.count; ++i) {
@@ -498,17 +499,27 @@ enum LocationClass
 			[_scrollView.superview addSubview:_pressingView];
 			_pressingView.x -= _scrollView.contentOffset.x;
 			_pressingView.y -= _scrollView.contentOffset.y;
-			_scrolling = YES;
+			_currentLocation = [_scrollView convertPoint:_currentLocation toView:_scrollView.superview];
 			[_scrollView setContentOffset:offset animated:YES];
 		}
+		else {
+			_firing = NO;
+		}
+	} else {
+		_firing = NO;				//Set when last thing finish
 	}
 }
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
 {
+	_currentLocation = [_scrollView convertPoint:_currentLocation fromView:_scrollView.superview];
 	[_scrollView addSubview:_pressingView];
 	_pressingView.x += _scrollView.contentOffset.x;
 	_pressingView.y += _scrollView.contentOffset.y;
-	_scrolling = NO;
+	_firing = NO;
+	if (_justEnd) {
+		_justEnd = NO;
+		[self _layBackPressingView];
+	}
 	NSLog(@"End scrolling");
 }
 

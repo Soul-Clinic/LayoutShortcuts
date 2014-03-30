@@ -8,6 +8,12 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol ShortCutOrdersUpdateDelegate <NSObject>
+
+- (void)shortcutOrdersDidUpdate:(NSArray*)newOrders;
+
+@end
+
 @interface ShortCutViewController : UIViewController <UIScrollViewDelegate>
 
 @property (strong, nonatomic) UIScrollView* scrollView;
@@ -17,6 +23,7 @@
 @property (assign, nonatomic) UIEdgeInsets margins;
 @property (strong, nonatomic) NSArray* staticViews;
 @property (assign, nonatomic) BOOL alignStaticViews;
+@property (weak, nonatomic) id<ShortCutOrdersUpdateDelegate> delegate;
 
 - (void)updateSubviews;
 - (void)alignShortcuts;

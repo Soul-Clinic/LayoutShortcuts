@@ -404,6 +404,7 @@
 				GCC_PREFIX_HEADER = "LayoutShortcuts-Prefix.pch";
 				INFOPLIST_FILE = "LayoutShortcuts-Info.plist";
 				PRODUCT_NAME = LayoutShortcuts;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -417,6 +418,7 @@
 				GCC_PREFIX_HEADER = "LayoutShortcuts-Prefix.pch";
 				INFOPLIST_FILE = "LayoutShortcuts-Info.plist";
 				PRODUCT_NAME = LayoutShortcuts;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

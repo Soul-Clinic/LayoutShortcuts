@@ -84,10 +84,6 @@ enum LocationClass
 	}
 	return self;
 }
-- (void)viewDidLoad
-{
-    NSLog(@"Did load short cuts");
-}
 - (void)loadView
 {
 	[super loadView];
@@ -98,12 +94,12 @@ enum LocationClass
 	}
 	_scrollView.backgroundColor = self.view.backgroundColor;
 	_scrollView.delegate = self;
+    _scrollView.pagingEnabled = YES;
 	self.view = _scrollView;
 
 }
 - (void)viewDidLayoutSubviews
 {
-    NSLog(@"Did lay out short cuts");
     static BOOL initialized = NO;
     if (!initialized) {
         [self updateSubviews];
@@ -114,17 +110,13 @@ enum LocationClass
 - (void)viewDidAppear:(BOOL)animated
 {
 	[super viewDidAppear:animated];
-    NSLog(@"Shortcut did appear");
 	self.view.superview.backgroundColor = [UIColor clearColor];
-    _scrollView.pagingEnabled = YES;
 #ifdef TESTING
 	_scrollView.contentSize = CGSizeMake(_scrollView.width * 4, _scrollView.height);
 	_scrollView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"flyship.jpg"]];
     _scrollView.layer.cornerRadius = 10;
-#endif
     _staticViews = @[_scrollView.subviews[3], _scrollView.subviews[7]];
-
-
+#endif
 }
 
 - (void)alignShortcuts
@@ -232,17 +224,16 @@ enum LocationClass
 		if (!existed) {
 			UILongPressGestureRecognizer* lp = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(_handleLongPressGesture:)];
 			[aView addGestureRecognizer:lp];
-			UITapGestureRecognizer* tp = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(clicked:)];
-			[aView addGestureRecognizer:tp];
 		}
-		
+#ifdef TESTING
 		aView.layer.cornerRadius = 5;
 		aView.layer.shadowColor = [UIColor blackColor].CGColor;
 		aView.layer.shadowOffset = CGSizeZero;
 		aView.layer.shadowOpacity = 0.7;
-
+#endif
 		[_shortcuts addObject:aView];
 	}
+//Update origins and orders
 	[self _resortShortcutsIndex];
     [_orders removeAllObjects];
 	for (int i = 0; i < _shortcuts.count; ++i) {
@@ -284,11 +275,6 @@ enum LocationClass
 	}
     NSLog(@"Columns is %i; rows is %i", _columns, _rows);
 }
-- (IBAction)clicked:(id)sender
-{
-	NSLog(@"Clicked");
-}
-
 - (int)_pressingIndex
 {
 	return [self _indexAtPosition:_currentLocation];
@@ -532,6 +518,9 @@ enum LocationClass
                              [temp addObject:_orders[[_records indexOfObject:_shortcuts[i]]]];
                          }
                          _orders = temp;
+                         if ([_delegate respondsToSelector:@selector(shortcutOrdersDidUpdate:)]) {
+                             [_delegate shortcutOrdersDidUpdate:[NSArray arrayWithArray:_orders]];
+                         }
 //                         NSLog(@"%@", _orders);
                          //TODO: Call the delegate method
 

@@ -15,6 +15,8 @@
 @property (assign, nonatomic) int rows;
 @property (assign, nonatomic) BOOL vertical;
 @property (assign, nonatomic) UIEdgeInsets margins;
+@property (strong, nonatomic) NSArray* staticViews;
+@property (assign, nonatomic) BOOL alignStaticViews;
 
 - (void)updateSubviews;
 - (void)alignShortcuts;

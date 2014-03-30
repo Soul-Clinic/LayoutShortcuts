@@ -39,7 +39,6 @@
 
 @implementation ViewController
 
-
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -78,6 +77,8 @@
 	[self.view addGestureRecognizer:tap];
 	[self.view addGestureRecognizer:doubleTap];
 }
+
+
 - (IBAction)clicked:(UIButton*)sender
 {
 	NSLog(@"I am touched!");

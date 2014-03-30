@@ -39,8 +39,7 @@ enum LocationClass
 
 @interface ShortCutViewController ()
 {
-	NSMutableArray* _shortcuts;
-	NSMutableArray* _origins;
+	NSMutableArray* _shortcuts, *_origins, *_orders, *_records;
 	UIView* _pressingView;
 	float _zPosition;
 	int _currentIndex, _destinationIndex, _appending, _pageIndex;
@@ -55,6 +54,7 @@ enum LocationClass
 {
 	_shortcuts = [NSMutableArray array];
 	_origins = [NSMutableArray array];
+    _orders = [NSMutableArray array];
 	_currentIndex = _destinationIndex = kLocationOutsideShortcuts;
 //    _vertical = YES;
 }
@@ -196,10 +196,12 @@ enum LocationClass
 		[_shortcuts addObject:aView];
 	}
 	[self _resortShortcutsIndex];
+    [_orders removeAllObjects];
 	for (int i = 0; i < _shortcuts.count; ++i) {
 		UIView* aView = _shortcuts[i];
 		aView.layer.zPosition = i;
 		[_origins addObject:[NSValue valueWithCGPoint:aView.origin]];
+        [_orders addObject:[NSNumber numberWithInt:i]];
 	}
     [self _calculateColumnRow];
 }
@@ -236,6 +238,8 @@ enum LocationClass
 
 - (int)_indexAtPosition:(CGPoint)point
 {
+    point = [_scrollView convertPoint:point fromView:_scrollView.superview];
+
 	static float scWidth, scHeight, paddingX, paddingY;
 	float currentPage, totalPages, x, y;
     currentPage = [self _currentPage];
@@ -334,12 +338,10 @@ enum LocationClass
 	if (totalDistance < kMaxDistanceForQuiet) {
 		if (!_firing) {
 			_firing = YES;
-            NSLog(@"Firing");
 			[self _updateLayout];
 		}
 	}
 
-//	NSLog(@"Last distance %f", totalDistance);
 	lastLocation = _currentLocation;
 }
 
@@ -359,13 +361,17 @@ enum LocationClass
 		{
 			AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);			//Only work on iPhone
 
-			start = gesture.view.origin;
 			shortcut.alpha *= kPressAlpha;
-			beginLocation = [gesture locationInView:_scrollView];
+			beginLocation = [gesture locationInView:_scrollView.superview];
 			_currentLocation = beginLocation;
 			_zPosition = layer.zPosition;
 			_currentIndex = [self _pressingIndex];
 			_pressingView = shortcut;
+
+            CGPoint origin = [_scrollView convertPoint:_pressingView.origin toView:_scrollView.superview];
+            _pressingView.origin = origin;
+            [_scrollView.superview addSubview:_pressingView];
+			start = _pressingView.origin;
 
 			layer.zPosition = 100;
 
@@ -387,14 +393,16 @@ enum LocationClass
 			}
 			timer = [NSTimer scheduledTimerWithTimeInterval:kQuietTimeIntervalBetween target:self selector:@selector(_offsetDetection:) userInfo:distances repeats:YES];
             timer.tolerance = 0.06;
+
+            _records = [_shortcuts copy];
 			break;
 		}
 		case UIGestureRecognizerStateChanged:
 		{
-			if (_firing) {
-				return;
-			}
-			_currentLocation = [gesture locationInView:_scrollView];
+//			if (_firing) {
+//				return;
+//			}
+			_currentLocation = [gesture locationInView:_scrollView.superview];
 			currentOrigin = CGPointMake(start.x + (_currentLocation.x - beginLocation.x),
 										start.y + (_currentLocation.y - beginLocation.y));
 			shortcut.origin = currentOrigin;
@@ -425,24 +433,28 @@ enum LocationClass
 	layer.transform = [((CALayer*)layer.presentationLayer) transform];
 	[layer removeAnimationForKey:kScaleAnimationKey];
 
-//	_currentIndex = [self _indexAtPosition:_currentLocation];
-
     [self _resortShortcutsIndex];
 	float duration = (_currentIndex >= 0 ? 0.2 : 0.6) * kStandDuration;
+    _scrollView.scrollEnabled = NO;
 	[UIView animateWithDuration:duration
 						  delay:0
 						options:UIViewAnimationOptionBeginFromCurrentState
 					 animations:^{
 						 _pressingView.alpha /= kPressAlpha;
 						 layer.transform = CATransform3DIdentity;
-						 if (_layoutUpdated == NO) {			// Not changed after long press begin, so lay back to the original one
-							 NSUInteger index = [_shortcuts indexOfObject:_pressingView];
-							 _pressingView.origin = [_origins[index] CGPointValue];
-						 }
-						 else {
+                         NSUInteger index = [_shortcuts indexOfObject:_pressingView];
+                         CGPoint origin = [_scrollView convertPoint:[_origins[index] CGPointValue] toView:_scrollView.superview] ;
+                         _pressingView.origin = origin;
+                         if (!CGRectContainsPoint(_scrollView.superview.bounds, origin)  ) {
+                             _pressingView.alpha = 0.0;
+                         }
+
+						 if (_layoutUpdated) {
 							 for (int i = 0; i < _shortcuts.count; ++i) {
 								 UIView* shortcut = _shortcuts[i];
-								 shortcut.origin = [_origins[i] CGPointValue];
+                                 if (shortcut != _pressingView) {
+                                     shortcut.origin = [_origins[i] CGPointValue];
+                                 }
 							 }
 						 }
 					 }
@@ -451,13 +463,25 @@ enum LocationClass
 						 for (UIView* shortcut in _shortcuts) {
 							 [shortcut.layer removeAnimationForKey:kShakeAnimationKey];
 						 }
+                         _pressingView.alpha = 1.0;
+                         CGPoint origin = [_scrollView convertPoint:_pressingView.origin fromView:_scrollView.superview];
+                         _pressingView.origin = origin;
+                         [_scrollView addSubview:_pressingView];
 						 _currentIndex = kLocationOutsideShortcuts;
 						 _pressingView = nil;
 						 _appending = NO;
 						 _layoutUpdated = NO;
                          _justEnd = NO;
+                         _scrollView.scrollEnabled = YES;
 						 [self _resortShortcutsIndex];
-						 NSLog(@"Complete");
+                         NSMutableArray* temp = [NSMutableArray array];
+                         for (int i = 0; i < _shortcuts.count; ++i) {
+                             [temp addObject:_orders[[_records indexOfObject:_shortcuts[i]]]];
+                         }
+                         _orders = temp;
+                         NSLog(@"%@", _orders);
+                         //TODO: Call the delegate method
+
 					 }];
 }
 - (void)_resortShortcutsIndex
@@ -530,6 +554,11 @@ enum LocationClass
 {
 	_destinationIndex = [self _pressingIndex];
 
+    if (_destinationIndex == _currentIndex) {
+        _firing = NO;
+        return;
+    }
+
 	if (_destinationIndex < 0 && _destinationIndex != kLocationOutsideShortcuts) {
 		CGPoint offset = _scrollView.contentOffset;
 		switch (_destinationIndex) {
@@ -549,29 +578,15 @@ enum LocationClass
 				break;
 		}
 
-        _scrollView.superview.clipsToBounds = YES;
-        [_scrollView.superview addSubview:_pressingView];
-        _pressingView.x -= _scrollView.contentOffset.x;
-        _pressingView.y -= _scrollView.contentOffset.y;
-        _currentLocation = [_scrollView convertPoint:_currentLocation toView:_scrollView.superview];
         [_scrollView setContentOffset:offset animated:YES];
 
         return;
 	} else {
-        if (_destinationIndex == _currentIndex) {
-            _firing = NO;
-            return;
-        }
         [self _rearrange];
 	}
 }
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
 {
-	_currentLocation = [_scrollView convertPoint:_currentLocation fromView:_scrollView.superview];
-	[_scrollView addSubview:_pressingView];
-	_pressingView.x += _scrollView.contentOffset.x;
-	_pressingView.y += _scrollView.contentOffset.y;
-    _scrollView.superview.clipsToBounds = NO;
 	_firing = NO;
 	if (_justEnd) {
 		_justEnd = NO;
@@ -619,7 +634,6 @@ enum LocationClass
 
 - (void)moveShortcutsRangFrom:(int)first to:(int)last directionForward:(BOOL)forward
 {
-//	static BOOL moving;
 	_layoutUpdated = YES;
 
 	if (_moving) {
@@ -634,7 +648,6 @@ enum LocationClass
 		if (!column && i) {
 			row++;
 		}
-		NSLog(@"Row is %i", row);
 		_moving = YES;
 		UIView* shortcut = _shortcuts[i];
 		[UIView animateWithDuration:duration
@@ -644,7 +657,6 @@ enum LocationClass
 							 shortcut.origin =[_origins[forward ? i + 1 : i - 1] CGPointValue];
 						 }
 						 completion:^(BOOL finished) {
-							 NSLog(@"Finish %@", finished ? @"YES" : @"NO");
 							 _moving = NO;
 							 [self _resortShortcutsIndex];
 							 if (_appending && _currentIndex != _destinationIndex) {

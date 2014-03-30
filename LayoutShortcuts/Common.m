@@ -264,7 +264,7 @@ NSString* getLanguageCode(void)
 - (void)printSubviewsTree
 {
     NSLog(@"==========================================================================");
-    NSLog(@"%@ [%p]{(%.2f, %.2f) (%.2f, %.2f)}  Subview trees::\n",  self.class, self, self.x, self.y, self.width, self.height );
+    NSLog(@"%@ [%p]{(%.2f, %.2f) (%.2f, %.2f)}  Subview trees:\n",  self.class, self, self.x, self.y, self.width, self.height );
     NSLog(@" ");
     [self printSubviewsIndex:0];
     NSLog(@" ");
@@ -288,7 +288,7 @@ NSString* getLanguageCode(void)
 - (void)printSuperViewsTree
 {
     NSLog(@"==========================================================================");
-    NSLog(@"%@ [%p] {(%.2f, %.2f) (%.2f, %.2f)}  Super view trees::\n",  self.class, self, self.x, self.y, self.width, self.height );
+    NSLog(@"%@ [%p] {(%.2f, %.2f) (%.2f, %.2f)}  Super view trees:\n",  self.class, self, self.x, self.y, self.width, self.height );
     NSLog(@" ");
     [self printSuperViewsIndex:0];
     NSLog(@" ");

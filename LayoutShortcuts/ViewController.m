@@ -355,7 +355,8 @@
 								 _appending = NO;
 							 }
 						 }];
-	}}
+	}
+}
 
 - (void)resortButtonIndexs
 {

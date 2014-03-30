@@ -14,7 +14,8 @@
 @property (assign, nonatomic) int columns;
 @property (assign, nonatomic) int rows;
 @property (assign, nonatomic) BOOL vertical;
+@property (assign, nonatomic) UIEdgeInsets margins;
 
-- (void)subviewsUpdated;
+- (void)updateSubviews;
 - (void)alignShortcuts;
 @end

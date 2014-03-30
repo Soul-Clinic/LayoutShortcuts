@@ -15,14 +15,16 @@
 #define kPressAlpha				0.9
 #define kShakeAngle				(10.0 / 180.0 * M_PI)
 #define kShakeTimeframe			0.1
-#define kStandDuration			1.0
-#define kMoveDuration			0.7
+#define kStandDuration          0.8
+#define kMoveDuration			0.5
 #define kPressScaleFactor		1.3
-#define kLocationScrollBorder	20
+#define kLocationScrollBorder	25.0
 
-#define kQuietTimeTotal					0.5
+#define kQuietTimeTotal					0.3
 #define kQuietTimeIntervalBetween		0.1
-#define kMaxDistanceForQuiet			20.0
+#define kMaxDistanceForQuiet			10.0
+
+#define kMaxDifferInSameLine            12.0
 
 #define TESTING
 
@@ -42,7 +44,7 @@ enum LocationClass
 	UIView* _pressingView;
 	float _zPosition;
 	int _currentIndex, _destinationIndex, _appending, _pageIndex;
-	BOOL _layoutUpdated, _firing, _justEnd;
+	BOOL _layoutUpdated, _firing, _justEnd, _moving;
 	CGPoint _currentLocation;
 }
 @end
@@ -54,6 +56,7 @@ enum LocationClass
 	_shortcuts = [NSMutableArray array];
 	_origins = [NSMutableArray array];
 	_currentIndex = _destinationIndex = kLocationOutsideShortcuts;
+//    _vertical = YES;
 }
 - (id)init
 {
@@ -93,47 +96,56 @@ enum LocationClass
 	self.view = _scrollView;
 }
 
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-	_scrollView.pagingEnabled = YES;
-	[self subviewsUpdated];
-
-	NSLog(@"Width in load %f", _scrollView.width);
-}
-
-- (void)viewDidLayoutSubviews
-{
-	[super viewDidLayoutSubviews];
-	float minY = MAXFLOAT, range = 10;
-	for (UIView* view in _shortcuts) {
-		minY = MIN(view.y, minY);
-	}
-	_columns = 0;
-	for (UIView* view in _shortcuts) {
-		if (view.y - minY < range) {
-			_columns++;
-		}
-	}
-}
-
 - (void)viewDidAppear:(BOOL)animated
 {
 	[super viewDidAppear:animated];
 	self.view.superview.backgroundColor = [UIColor clearColor];
-
-	_scrollView.contentSize = CGSizeMake(_scrollView.width * 3, _scrollView.height * 3);
+    _scrollView.pagingEnabled = YES;
+#ifdef TESTING
+	_scrollView.contentSize = CGSizeMake(_scrollView.width * 4, _scrollView.height);
 	_scrollView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"flyship.jpg"]];
-
-	UIView* aView = _shortcuts.lastObject;
-	aView.x += _scrollView.width;
-	aView.y += _scrollView.height;
-	[self subviewsUpdated];
-	NSLog(@"-3.0 %% 3 = %i", 2 % 3);
+#endif
+    [self updateSubviews];
+    [self alignShortcuts];
+    _scrollView.layer.cornerRadius = 10;
 }
 
 - (void)alignShortcuts
 {
+    [self _resortShortcutsIndex];
+    for (int i = 0; i < _shortcuts.count; ++i) {
+        if ([[_shortcuts[i] subviews] count] == 0) {
+            UIView* view = _shortcuts[i];
+            UILabel* label = [[UILabel alloc] initWithFrame:view.bounds];
+            label.text = [NSString stringWithFormat:@"%i", i];
+            label.font = [UIFont systemFontOfSize:40];
+            label.textAlignment = NSTextAlignmentCenter;
+            [view addSubview:label];
+        }
+    }
+    CGSize size = [_shortcuts.firstObject frameSize];      //Assume all are in the same size
+    if (UIEdgeInsetsEqualToEdgeInsets(_margins, UIEdgeInsetsZero)) {
+        _margins.left = (_scrollView.width - size.width * _columns) / _columns / 2;
+        _margins.right = _margins.left;
+        _margins.top = (_scrollView.height - size.height * _rows) / _rows / 2;
+        _margins.bottom = _margins.top;
+    }
+    int pageSize = (int)(_columns * _rows);
+    [UIView animateWithDuration:0.4 animations:^{
+        for (int i = 0; i < _shortcuts.count; ++i) {
+            int page = i / pageSize,
+            row = (i % pageSize) / (int)_columns,
+            col = i % _columns;
+
+            UIView* shortcut = _shortcuts[i];
+            shortcut.x = (_vertical ? 0 : page * _scrollView.width) + (col + 1) * _margins.left
+                + col * _margins.right + col * shortcut.width ;
+            shortcut.y = (_vertical ? page * _scrollView.height : 0) + (row + 1) * _margins.top
+                + row * _margins.bottom + row * shortcut.height;
+        }
+    } completion:^(BOOL finished) {
+        [self updateSubviews];
+    }];
 
 }
 - (void)setColumns:(int)columns
@@ -151,7 +163,7 @@ enum LocationClass
 	}
 }
 
-- (void)subviewsUpdated
+- (void)updateSubviews
 {
 	[_shortcuts removeAllObjects];
 	[_origins removeAllObjects];
@@ -159,12 +171,28 @@ enum LocationClass
 		if (CGSizeEqualToSize(aView.frame.size, CGSizeZero) || aView.userInteractionEnabled == NO) {
 			continue;						//Get rid of the UILayoutGuid
 		}
+		BOOL existed = NO;
 
-		UILongPressGestureRecognizer* lp = [[UILongPressGestureRecognizer alloc] initWithTarget:self
-																						 action:@selector(handleLongPressGesture:)];
-		UIPanGestureRecognizer* pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
-		[aView addGestureRecognizer:lp];
-		[aView addGestureRecognizer:pan];
+		if (aView.gestureRecognizers) {
+			for (UIGestureRecognizer* gesture in aView.gestureRecognizers) {
+				if ([gesture isKindOfClass:[UILongPressGestureRecognizer class]]) {
+					existed = YES;
+					break;
+				}
+			}
+		}
+		if (!existed) {
+			UILongPressGestureRecognizer* lp = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(_handleLongPressGesture:)];
+			[aView addGestureRecognizer:lp];
+			UITapGestureRecognizer* tp = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(clicked:)];
+			[aView addGestureRecognizer:tp];
+		}
+		
+		aView.layer.cornerRadius = 5;
+		aView.layer.shadowColor = [UIColor blackColor].CGColor;
+		aView.layer.shadowOffset = CGSizeZero;
+		aView.layer.shadowOpacity = 0.7;
+
 		[_shortcuts addObject:aView];
 	}
 	[self _resortShortcutsIndex];
@@ -173,21 +201,46 @@ enum LocationClass
 		aView.layer.zPosition = i;
 		[_origins addObject:[NSValue valueWithCGPoint:aView.origin]];
 	}
+    [self _calculateColumnRow];
 }
-- (void)handlePan:(UIPanGestureRecognizer*)gesture
-{
-//	NSLog(@"Velocity is %@", NSStringFromCGPoint([gesture velocityInView:gesture.view]));
 
+- (void)_calculateColumnRow
+{
+
+	float minX = MAXFLOAT, minY = MAXFLOAT;
+	for (UIView* view in _shortcuts) {
+        minX = MIN(view.x, minX);
+		minY = MIN(view.y, minY);
+	}
+	_columns = 0;
+    _rows = 0;
+	for (UIView* view in _shortcuts) {
+        if (!CGRectContainsPoint(_scrollView.frame, view.center)) {     //Only calculate the first page
+            continue;
+        }
+		if (view.y - minY < kMaxDifferInSameLine) {
+			_columns++;
+		}
+        if (view.x - minX < kMaxDifferInSameLine) {
+            _rows++;
+        }
+	}
+    NSLog(@"Columns is %i; rows is %i", _columns, _rows);
+}
+- (IBAction)clicked:(id)sender
+{
+	NSLog(@"Clicked");
+
+    [_scrollView.superview printSubviewsTree];
 }
 
 - (int)_indexAtPosition:(CGPoint)point
 {
 	static float scWidth, scHeight, paddingX, paddingY;
-
 	float currentPage, totalPages, x, y;
+    currentPage = [self _currentPage];
 
 	if (self.vertical == NO) {
-		currentPage = floorf(_scrollView.contentOffset.x / _scrollView.width);
 		totalPages = _vertical ? : ceilf(_scrollView.contentSize.width / _scrollView.width),
 		x = point.x - _scrollView.contentOffset.x;
 
@@ -195,28 +248,23 @@ enum LocationClass
 			return kLocationScrollLeft;
 		}
 		else if (x > _scrollView.width - kLocationScrollBorder && currentPage < totalPages - 1) {
-
 			return kLocationScrollRight;
 		}
 	}
 	else
 	{
-		currentPage = floorf(_scrollView.contentOffset.y / _scrollView.height);
 		totalPages = ceilf(_scrollView.contentSize.height / _scrollView.height);
 		y = point.y - _scrollView.contentOffset.y;
 
 		if (y < kLocationScrollBorder && currentPage > 0) {
-			NSLog(@"Scroll top");
 			return kLocationScrollTop;
 		}
 		else if (y > _scrollView.height - kLocationScrollBorder && currentPage < totalPages - 1) {
-			NSLog(@"Scroll bottom");
 			return kLocationScrollBottom;
 		}
 	}
 
 	if (_origins.count == 1) {
-
 		CGPoint pt = [_origins.firstObject CGPointValue];
 		if (point.x >  pt.x - paddingX && point.x < pt.x + paddingX + _pressingView.width
 			&& point.y > pt.y - paddingY && point.y< pt.y + paddingY + _pressingView.height) {
@@ -286,6 +334,7 @@ enum LocationClass
 	if (totalDistance < kMaxDistanceForQuiet) {
 		if (!_firing) {
 			_firing = YES;
+            NSLog(@"Firing");
 			[self _updateLayout];
 		}
 	}
@@ -294,7 +343,7 @@ enum LocationClass
 	lastLocation = _currentLocation;
 }
 
-- (void)handleLongPressGesture:(UILongPressGestureRecognizer*)gesture
+- (void)_handleLongPressGesture:(UILongPressGestureRecognizer*)gesture
 {
 	static CGPoint start, beginLocation, currentOrigin;
 	static NSTimer* timer;
@@ -326,8 +375,6 @@ enum LocationClass
 					[aView.layer addAnimation:[self _shakeAnimationAngle:kShakeAngle duration:kShakeTimeframe] forKey:kShakeAnimationKey];
 				}
 			}
-			shortcut.layer.shadowOpacity = 1;
-			shortcut.layer.shadowRadius = 5;
 
 			int count = ceilf(kQuietTimeTotal / kQuietTimeIntervalBetween);
 			NSMutableArray* distances = [NSMutableArray arrayWithCapacity:count];
@@ -338,8 +385,8 @@ enum LocationClass
 			if (timer) {
 				[timer invalidate];
 			}
-			timer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(_offsetDetection:) userInfo:distances repeats:YES];
-
+			timer = [NSTimer scheduledTimerWithTimeInterval:kQuietTimeIntervalBetween target:self selector:@selector(_offsetDetection:) userInfo:distances repeats:YES];
+            timer.tolerance = 0.06;
 			break;
 		}
 		case UIGestureRecognizerStateChanged:
@@ -357,7 +404,7 @@ enum LocationClass
 		case UIGestureRecognizerStateEnded:
 		{
 			[timer invalidate];
-			if (!_firing) {
+			if (!_firing || _moving) {
 				[self _layBackPressingView];
 			}
 			else {
@@ -367,6 +414,7 @@ enum LocationClass
 			break;
 		}
 		default:
+            NSLog(@"Fail gesture? %i", (int)gesture.state);
 			break;
 	}
 }
@@ -379,7 +427,7 @@ enum LocationClass
 
 //	_currentIndex = [self _indexAtPosition:_currentLocation];
 
-	[self _resortShortcutsIndex];
+    [self _resortShortcutsIndex];
 	float duration = (_currentIndex >= 0 ? 0.2 : 0.6) * kStandDuration;
 	[UIView animateWithDuration:duration
 						  delay:0
@@ -393,8 +441,8 @@ enum LocationClass
 						 }
 						 else {
 							 for (int i = 0; i < _shortcuts.count; ++i) {
-								 UIButton* btn = _shortcuts[i];
-								 btn.origin = [_origins[i] CGPointValue];
+								 UIView* shortcut = _shortcuts[i];
+								 shortcut.origin = [_origins[i] CGPointValue];
 							 }
 						 }
 					 }
@@ -407,6 +455,7 @@ enum LocationClass
 						 _pressingView = nil;
 						 _appending = NO;
 						 _layoutUpdated = NO;
+                         _justEnd = NO;
 						 [self _resortShortcutsIndex];
 						 NSLog(@"Complete");
 					 }];
@@ -420,14 +469,14 @@ enum LocationClass
 
 	[_shortcuts sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
 		UIView* view1 = obj1, *view2 = obj2;
-		float vertical = view1.y - view2.y, horizontal = view1.x - view2.x;
+		float vertical = fabsf(view1.y - view2.y), horizontal = view1.x - view2.x;
 		float pageIndex1= floorf(view1.x / pageWidth), pageIndex2 = floorf(view2.x / pageWidth);
 
 		if (pageIndex1 != pageIndex2) {
 			return pageIndex1 < pageIndex2 ? NSOrderedAscending : NSOrderedDescending;
 		}
 
-		if (vertical != 0) {
+		if (vertical > kMaxDifferInSameLine || horizontal == 0) {
 			return view1.y < view2.y ? NSOrderedAscending : NSOrderedDescending;
 		}
 		else if (horizontal != 0) {
@@ -437,11 +486,18 @@ enum LocationClass
 	}];
 
 	if (_pressingView) {
-		if (_currentIndex >= 0) {				//Outside means the last one
+		if (_currentIndex >= 0) {				//Outside means the last one, on that page
 			[_shortcuts insertObject:_pressingView atIndex:_currentIndex];
 		}
 		else {
-			[_shortcuts addObject:_pressingView];
+            float currentPage = [self _currentPage];
+
+            float lastOne = (currentPage + 1) * _columns * _rows - 1;
+            if (_shortcuts.count < lastOne) {
+                lastOne = _shortcuts.count;
+            }
+
+			[_shortcuts insertObject:_pressingView atIndex:lastOne];
 		}
 	}
 }
@@ -472,10 +528,9 @@ enum LocationClass
 
 - (void)_updateLayout
 {
-//	_currentLocation
 	_destinationIndex = [self _pressingIndex];
 
-	if (_destinationIndex < 0) {
+	if (_destinationIndex < 0 && _destinationIndex != kLocationOutsideShortcuts) {
 		CGPoint offset = _scrollView.contentOffset;
 		switch (_destinationIndex) {
 			case kLocationScrollBottom:
@@ -494,19 +549,20 @@ enum LocationClass
 				break;
 		}
 
-		if (!CGPointEqualToPoint(offset, _scrollView.contentOffset)) {
-			_scrollView.superview.clipsToBounds = YES;
-			[_scrollView.superview addSubview:_pressingView];
-			_pressingView.x -= _scrollView.contentOffset.x;
-			_pressingView.y -= _scrollView.contentOffset.y;
-			_currentLocation = [_scrollView convertPoint:_currentLocation toView:_scrollView.superview];
-			[_scrollView setContentOffset:offset animated:YES];
-		}
-		else {
-			_firing = NO;
-		}
+        _scrollView.superview.clipsToBounds = YES;
+        [_scrollView.superview addSubview:_pressingView];
+        _pressingView.x -= _scrollView.contentOffset.x;
+        _pressingView.y -= _scrollView.contentOffset.y;
+        _currentLocation = [_scrollView convertPoint:_currentLocation toView:_scrollView.superview];
+        [_scrollView setContentOffset:offset animated:YES];
+
+        return;
 	} else {
-		_firing = NO;				//Set when last thing finish
+        if (_destinationIndex == _currentIndex) {
+            _firing = NO;
+            return;
+        }
+        [self _rearrange];
 	}
 }
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
@@ -515,22 +571,94 @@ enum LocationClass
 	[_scrollView addSubview:_pressingView];
 	_pressingView.x += _scrollView.contentOffset.x;
 	_pressingView.y += _scrollView.contentOffset.y;
+    _scrollView.superview.clipsToBounds = NO;
 	_firing = NO;
 	if (_justEnd) {
 		_justEnd = NO;
 		[self _layBackPressingView];
 	}
-	NSLog(@"End scrolling");
 }
 
+- (float)_currentPage
+{
+    float currentPage = _vertical ?  floorf(_scrollView.contentOffset.y / _scrollView.height) : floorf(_scrollView.contentOffset.x / _scrollView.width);
+    return currentPage;
+}
 
+- (void)_rearrange
+{
 
+    float currentPage = [self _currentPage];
 
+    float lastOne = (currentPage + 1) * _columns * _rows - 1;
+    if (_shortcuts.count - 1 < lastOne) {
+        lastOne = _shortcuts.count - 1;
+    }
 
+	if (_currentIndex == kLocationOutsideShortcuts) {				//Move in
+		[self moveShortcutsRangFrom:_destinationIndex to:lastOne - 1 directionForward:YES];
+	}
+	else if (_destinationIndex == kLocationOutsideShortcuts) {           //Move out
+        if (_currentIndex < lastOne) {
+            [self moveShortcutsRangFrom:_currentIndex + 1 to:lastOne directionForward:NO];
+        }
+        else if (_currentIndex > lastOne) {
+            [self moveShortcutsRangFrom:lastOne to:_currentIndex - 1 directionForward:YES];
+        }
+        else {
+            _firing = NO;
+        }
+	}
+	else if (_currentIndex < _destinationIndex) {
+		[self moveShortcutsRangFrom:_currentIndex + 1 to:_destinationIndex directionForward:NO];
+	}
+	else if (_currentIndex > _destinationIndex) {
+		[self moveShortcutsRangFrom:_destinationIndex to:_currentIndex - 1 directionForward:YES];
+	}
+}
 
+- (void)moveShortcutsRangFrom:(int)first to:(int)last directionForward:(BOOL)forward
+{
+//	static BOOL moving;
+	_layoutUpdated = YES;
 
-
-
+	if (_moving) {
+		_appending = YES;
+		return;
+	}
+	_currentIndex = _destinationIndex;
+	static float duration = kMoveDuration;
+	int row = 0;
+	for (int i = first; i <= last; ++i) {
+		int column = i % _columns;
+		if (!column && i) {
+			row++;
+		}
+		NSLog(@"Row is %i", row);
+		_moving = YES;
+		UIView* shortcut = _shortcuts[i];
+		[UIView animateWithDuration:duration
+							  delay:(row * 0.2 + column * 0.15) * duration
+							options:UIViewAnimationOptionBeginFromCurrentState
+						 animations:^{
+							 shortcut.origin =[_origins[forward ? i + 1 : i - 1] CGPointValue];
+						 }
+						 completion:^(BOOL finished) {
+							 NSLog(@"Finish %@", finished ? @"YES" : @"NO");
+							 _moving = NO;
+							 [self _resortShortcutsIndex];
+							 if (_appending && _currentIndex != _destinationIndex) {
+								 [self _updateLayout];
+								 _appending = NO;
+							 } else {
+                                 _firing = NO;
+                             }
+                             if (_justEnd) {
+                                 [self _layBackPressingView];
+                             }
+						 }];
+	}
+}
 
 
 

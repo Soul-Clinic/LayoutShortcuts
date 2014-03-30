@@ -26,7 +26,6 @@
 
 #define kMaxDifferInSameLine            12.0
 
-#define TESTING
 
 enum LocationClass
 {
@@ -40,11 +39,11 @@ enum LocationClass
 @interface ShortCutViewController ()
 {
 	NSMutableArray* _shortcuts, *_origins, *_orders, *_records;
-	UIView* _pressingView;
+	UIView* _pressingView, *_containerView;
 	float _zPosition;
 	int _currentIndex, _destinationIndex, _appending, _pageIndex;
 	BOOL _layoutUpdated, _firing, _justEnd, _moving;
-	CGPoint _currentLocation;
+	CGPoint _currentLocation, _lastOffset;
 }
 @end
 
@@ -58,7 +57,7 @@ enum LocationClass
     _staticViews = @[];
     _alignStaticViews = YES;
 	_currentIndex = _destinationIndex = kLocationOutsideShortcuts;
-//    _vertical = YES;
+    //    _vertical = YES;
 }
 - (id)init
 {
@@ -93,11 +92,11 @@ enum LocationClass
 		[self.scrollView addSubview:subview];
 	}
 	_scrollView.backgroundColor = self.view.backgroundColor;
-	_scrollView.delegate = self;
     _scrollView.pagingEnabled = YES;
 	self.view = _scrollView;
 
 }
+
 - (void)viewDidLayoutSubviews
 {
     static BOOL initialized = NO;
@@ -105,35 +104,68 @@ enum LocationClass
         [self updateSubviews];
         [self alignShortcuts];
         initialized = YES;
+        self.view.superview.backgroundColor = [UIColor clearColor];
+    }
+    if (_scrollView.contentSize.width == 0) {
+        _scrollView.contentSize = [self _minContentSizeToWrapViews:_shortcuts];
+        _scrollView.contentOffset = _lastOffset;
     }
 }
+
 - (void)viewDidAppear:(BOOL)animated
 {
 	[super viewDidAppear:animated];
-	self.view.superview.backgroundColor = [UIColor clearColor];
-#ifdef TESTING
-	_scrollView.contentSize = CGSizeMake(_scrollView.width * 4, _scrollView.height);
-	_scrollView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"flyship.jpg"]];
-    _scrollView.layer.cornerRadius = 10;
-    _staticViews = @[_scrollView.subviews[3], _scrollView.subviews[7]];
-#endif
+
+    if (_scrollView.contentSize.width == 0) {
+        _scrollView.contentSize = [self _minContentSizeToWrapViews:_shortcuts];
+    }
+
+    _containerView = _scrollView.superview.superview;
+    if (_containerView == nil) {
+        _containerView = _scrollView.superview;
+    }
 }
+
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    NSLog(@"Offset is %@", NSStringFromCGPoint(_scrollView.contentOffset));
+    _lastOffset = _scrollView.contentOffset;
+}
+
+- (CGSize)_minContentSizeToWrapViews:(NSArray*)views
+{
+    if (_vertical) {
+        CGSize size = CGSizeMake(_scrollView.width, 0);
+        float height = 0;
+        for (UIView* subview in views) {
+            if (subview.bottom > height) {
+                height = subview.bottom;
+            }
+        }
+        height = ceilf(height / _scrollView.height) * _scrollView.height;
+        size.height = height;
+        return size;
+    }
+    else {
+        CGSize size = CGSizeMake(0, _scrollView.height);
+        float width = 0;
+        for (UIView* subview in views) {
+            if (subview.right > width) {
+                width = subview.right;
+            }
+        }
+        width = ceilf(width / _scrollView.width) * _scrollView.width;
+        size.width = width;
+        return size;
+    }
+}
+
 
 - (void)alignShortcuts
 {
     [self _resortShortcutsIndex];
-#ifdef TESTING
-    for (int i = 0; i < _shortcuts.count; ++i) {
-        if ([[_shortcuts[i] subviews] count] == 0) {
-            UIView* view = _shortcuts[i];
-            UILabel* label = [[UILabel alloc] initWithFrame:view.bounds];
-            label.text = [NSString stringWithFormat:@"%i", i];
-            label.font = [UIFont systemFontOfSize:40];
-            label.textAlignment = NSTextAlignmentCenter;
-            [view addSubview:label];
-        }
-    }
-#endif
+
     CGSize size = [_shortcuts.firstObject frameSize];      //Assume all are in the same size
     if (UIEdgeInsetsEqualToEdgeInsets(_margins, UIEdgeInsetsZero)) {
         _margins.left = (_scrollView.width - size.width * _columns) / _columns / 2;
@@ -152,9 +184,9 @@ enum LocationClass
 
             UIView* shortcut = _shortcuts[n];
             float x = (_vertical ? 0 : page * _scrollView.width) + (col + 1) * _margins.left
-                + col * _margins.right + col * shortcut.width ;
+            + col * _margins.right + col * shortcut.width ;
             float y = (_vertical ? page * _scrollView.height : 0) + (row + 1) * _margins.top
-                + row * _margins.bottom + row * shortcut.height;
+            + row * _margins.bottom + row * shortcut.height;
             CGRect frame = CGRectMake(x, y, shortcut.width, shortcut.height);
 
 
@@ -225,15 +257,10 @@ enum LocationClass
 			UILongPressGestureRecognizer* lp = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(_handleLongPressGesture:)];
 			[aView addGestureRecognizer:lp];
 		}
-#ifdef TESTING
-		aView.layer.cornerRadius = 5;
-		aView.layer.shadowColor = [UIColor blackColor].CGColor;
-		aView.layer.shadowOffset = CGSizeZero;
-		aView.layer.shadowOpacity = 0.7;
-#endif
+
 		[_shortcuts addObject:aView];
 	}
-//Update origins and orders
+    //Update origins and orders
 	[self _resortShortcutsIndex];
     [_orders removeAllObjects];
 	for (int i = 0; i < _shortcuts.count; ++i) {
@@ -281,7 +308,7 @@ enum LocationClass
 }
 - (int)_indexAtPosition:(CGPoint)point
 {
-    point = [_scrollView convertPoint:point fromView:_scrollView.superview];
+    point = [_scrollView convertPoint:point fromView:_containerView];
 
 	static float scWidth, scHeight, paddingX, paddingY;
 	float currentPage, totalPages, x, y;
@@ -401,15 +428,15 @@ enum LocationClass
 			AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);			//Only work on iPhone
 
 			shortcut.alpha *= kPressAlpha;
-			beginLocation = [gesture locationInView:_scrollView.superview];
+			beginLocation = [gesture locationInView:_containerView];
 			_currentLocation = beginLocation;
 			_zPosition = layer.zPosition;
 			_currentIndex = [self _pressingIndex];
 			_pressingView = shortcut;
 
-            CGPoint origin = [_scrollView convertPoint:_pressingView.origin toView:_scrollView.superview];
+            CGPoint origin = [_scrollView convertPoint:_pressingView.origin toView:_containerView];
+            [_containerView addSubview:_pressingView];
             _pressingView.origin = origin;
-            [_scrollView.superview addSubview:_pressingView];
 			start = _pressingView.origin;
 
 			layer.zPosition = 100;
@@ -434,14 +461,15 @@ enum LocationClass
             timer.tolerance = 0.06;
 
             _records = [_shortcuts copy];
+            NSLog(@"Press: %@", NSStringFromCGSize(_scrollView.contentSize));
 			break;
 		}
 		case UIGestureRecognizerStateChanged:
 		{
-//			if (_firing) {
-//				return;
-//			}
-			_currentLocation = [gesture locationInView:_scrollView.superview];
+            //			if (_firing) {
+            //				return;
+            //			}
+			_currentLocation = [gesture locationInView:_containerView];
 			currentOrigin = CGPointMake(start.x + (_currentLocation.x - beginLocation.x),
 										start.y + (_currentLocation.y - beginLocation.y));
 			shortcut.origin = currentOrigin;
@@ -482,9 +510,10 @@ enum LocationClass
 						 _pressingView.alpha /= kPressAlpha;
 						 layer.transform = CATransform3DIdentity;
                          NSUInteger index = [_shortcuts indexOfObject:_pressingView];
-                         CGPoint origin = [_scrollView convertPoint:[_origins[index] CGPointValue] toView:_scrollView.superview] ;
+                         CGPoint origin = [_scrollView convertPoint:[_origins[index] CGPointValue] toView:_containerView] ;
                          _pressingView.origin = origin;
-                         if (!CGRectContainsPoint(_scrollView.superview.bounds, origin)  ) {
+                         CGPoint current = [_scrollView convertPoint:[_origins[index] CGPointValue] toView:_scrollView.superview];
+                         if (!CGRectContainsPoint(_scrollView.superview.bounds, current)  ) {
                              _pressingView.alpha = 0.0;
                          }
 
@@ -503,7 +532,7 @@ enum LocationClass
 							 [shortcut.layer removeAnimationForKey:kShakeAnimationKey];
 						 }
                          _pressingView.alpha = 1.0;
-                         CGPoint origin = [_scrollView convertPoint:_pressingView.origin fromView:_scrollView.superview];
+                         CGPoint origin = [_scrollView convertPoint:_pressingView.origin fromView:_containerView];
                          _pressingView.origin = origin;
                          [_scrollView addSubview:_pressingView];
 						 _currentIndex = kLocationOutsideShortcuts;
@@ -518,10 +547,10 @@ enum LocationClass
                              [temp addObject:_orders[[_records indexOfObject:_shortcuts[i]]]];
                          }
                          _orders = temp;
-                         if ([_delegate respondsToSelector:@selector(shortcutOrdersDidUpdate:)]) {
-                             [_delegate shortcutOrdersDidUpdate:[NSArray arrayWithArray:_orders]];
+                         if ([_delegate respondsToSelector:@selector(shortcutViewController:OrdersDidUpdate:)]) {
+                             [_delegate shortcutViewController:self OrdersDidUpdate:[NSArray arrayWithArray:_orders]];
                          }
-//                         NSLog(@"%@", _orders);
+                         //                         NSLog(@"%@", _orders);
                          //TODO: Call the delegate method
 
 					 }];
@@ -620,13 +649,13 @@ enum LocationClass
 		}
 
         [_scrollView setContentOffset:offset animated:YES];
-
+        [self performSelector:@selector(endScrolling) withObject:nil afterDelay:0.5];
         return;
 	} else {
         [self _rearrange];
 	}
 }
-- (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
+- (void)endScrolling
 {
 	if (_justEnd) {
 		_justEnd = NO;
@@ -634,6 +663,9 @@ enum LocationClass
 	}
     else {
         [self performSelector:@selector(_resetScroll) withObject:nil afterDelay:0.5];
+    }
+    if ([_scrollView.delegate respondsToSelector:@selector(scrollViewDidEndDecelerating:)]) {
+        [_scrollView.delegate scrollViewDidEndDecelerating:_scrollView];
     }
 }
 - (void)_resetScroll

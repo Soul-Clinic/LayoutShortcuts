@@ -7,10 +7,11 @@
 //
 
 #import <UIKit/UIKit.h>
+@class ShortCutViewController;
 
 @protocol ShortCutOrdersUpdateDelegate <NSObject>
 
-- (void)shortcutOrdersDidUpdate:(NSArray*)newOrders;
+- (void)shortcutViewController:(ShortCutViewController*)controller OrdersDidUpdate:(NSArray*)newOrders;
 
 @end
 

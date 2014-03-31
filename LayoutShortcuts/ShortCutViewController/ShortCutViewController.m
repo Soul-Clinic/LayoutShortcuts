@@ -57,7 +57,6 @@ enum LocationClass
     _staticViews = @[];
     _alignStaticViews = YES;
 	_currentIndex = _destinationIndex = kLocationOutsideShortcuts;
-    //    _vertical = YES;
 }
 - (id)init
 {
@@ -101,7 +100,7 @@ enum LocationClass
 {
     if (!_initialized) {
         [self updateSubviews];
-        [self alignShortcuts];
+//        [self alignShortcuts];
         _initialized = YES;
         self.view.superview.backgroundColor = [UIColor clearColor];
     }
